@@ -23,6 +23,7 @@ dependencies:
 - base
 - rio
 - HGL
+- random
 
 ghc-options:
 - -Wall

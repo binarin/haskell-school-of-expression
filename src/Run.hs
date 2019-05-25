@@ -4,20 +4,49 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Run (run) where
 
-import Import
+import RIO.List
 import Graphics.SOE
 import Data.List (cycle)
+import System.Random (getStdRandom, randomR)
+
+import Import
+import Draw
+
+
+pickRandomDemo :: IO Demo
+pickRandomDemo = do
+  idx <- getStdRandom (randomR (0, length allDemos - 1))
+  case headMaybe (drop idx allDemos) of
+    Nothing -> pure DefaultDemo
+    Just demo -> pure demo
+
+runnableDemo :: Demo -> RIO App Demo
+runnableDemo DefaultDemo = pure Sierpinski
+runnableDemo RandomDemo = liftIO $ pickRandomDemo
+runnableDemo d = pure d
+
+runDemo :: Demo -> IO ()
+runDemo DefaultDemo = runSnowflakeFractal
+runDemo RandomDemo = pickRandomDemo >>= runDemo
+runDemo Sierpinski = serp
+runDemo FractalSnowflake = runSnowflakeFractal
+runDemo SomeColoredShapes = coloredShapes1
+
+
+coloredShapes1 :: IO ()
+coloredShapes1 = pure ()
 
 run :: RIO App ()
 run = do
-  liftIO $ runGraphics $ runSnowflakeFractal
-  logInfo "We're inside the application!"
+  demo <- optionsDemo <$> asks appOptions
+  demo' <- runnableDemo demo
+  logInfo $ "Running demo " <> displayShow demo'
+  liftIO $ runGraphics $ runDemo demo'
 
 
 runSnowflakeFractal :: IO ()
 runSnowflakeFractal = do
   w <- openWindow "Snowflake" (1000, 1000)
-  -- fillStar w 450 450 (769 `div` 2)
   snowflakeFractal w (cycle [Yellow, Blue, Green, Cyan, Red]) 500 500 330
   spaceClose w
 
@@ -48,12 +77,6 @@ serp = do
     sierpinskiTri w 50 300 256
     spaceClose w
 
-spaceClose :: Window -> IO ()
-spaceClose w = do
-  k <- getKey w
-  if k == ' ' then closeWindow w
-              else spaceClose w
-
 fillTri :: Window -> Int -> Int -> Int -> IO ()
 fillTri w x y size =
   drawInWindow w $
@@ -73,16 +96,3 @@ sierpinskiTri w x y size =
              sierpinskiTri w (x + size2) y size2
 
 
-fillStar :: Window -> Int -> Int -> Int -> IO ()
-fillStar w xc yc size = drawInWindow w $ do
-  polygon [ (xc, yc - size)
-          , (xc + cosine, yc + size2)
-          , (xc - cosine, yc + size2)
-          ]
-  polygon [ (xc, yc + size)
-          , (xc + cosine, yc - size2)
-          , (xc - cosine, yc - size2)
-          ]
-  where
-    cosine = floor (fromIntegral size * cos (pi @Double / 6.0))
-    size2 = size `div` 2
