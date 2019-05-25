@@ -12,7 +12,6 @@ import System.Random (getStdRandom, randomR)
 import Import
 import Draw
 
-
 pickRandomDemo :: IO Demo
 pickRandomDemo = do
   idx <- getStdRandom (randomR (0, length allDemos - 1))
@@ -21,20 +20,16 @@ pickRandomDemo = do
     Just demo -> pure demo
 
 runnableDemo :: Demo -> RIO App Demo
-runnableDemo DefaultDemo = pure Sierpinski
+runnableDemo DefaultDemo = pure SomeColoredShapes
 runnableDemo RandomDemo = liftIO $ pickRandomDemo
 runnableDemo d = pure d
 
 runDemo :: Demo -> IO ()
-runDemo DefaultDemo = runSnowflakeFractal
+runDemo DefaultDemo = coloredShapes1
 runDemo RandomDemo = pickRandomDemo >>= runDemo
 runDemo Sierpinski = serp
 runDemo FractalSnowflake = runSnowflakeFractal
 runDemo SomeColoredShapes = coloredShapes1
-
-
-coloredShapes1 :: IO ()
-coloredShapes1 = pure ()
 
 run :: RIO App ()
 run = do

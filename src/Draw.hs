@@ -6,10 +6,12 @@ module Draw ( inchToPixel
             , trans
             , shapeToGraphic
             , spaceClose
+            , coloredShapes1
             ) where
 
 import Shape
 import Graphics.SOE
+import Control.Monad (forM_)
 
 inchToPixel :: Float -> Int
 inchToPixel x = round $ x * 100
@@ -50,3 +52,30 @@ shapeToGraphic (Ellipse r1 r2) =
 shapeToGraphic (RtTriangle s1 s2) =
   polygon $ transList [(0, 0), (s1, 0), (0, s2)]
 shapeToGraphic (Polygon lst) = polygon $ transList lst
+
+
+sh1, sh2, sh3, sh4 :: Shape
+sh1 = Rectangle 3 2
+sh2 = Ellipse 1 1.5
+sh3 = RtTriangle 3 2
+sh4 = Polygon [(-2.5, 2.5)
+              ,(-1.5, 2.0)
+              ,(-1.1, 0.2)
+              ,(-1.7, -1.0)
+              ,(-3.0, 0)
+              ]
+
+type ColoredShapes = [(Color, Shape)]
+
+shs :: ColoredShapes
+shs = [(Red, sh1), (Blue, sh2), (Yellow, sh3), (Magenta, sh4)]
+
+drawShapes :: Window -> ColoredShapes -> IO ()
+drawShapes w ss = forM_ ss $ \(c, s) ->
+  drawInWindow w $ withColor c $ shapeToGraphic s
+
+coloredShapes1 :: IO ()
+coloredShapes1 = do
+  w <- openWindow "Drawing Shapes" (xWin, yWin)
+  drawShapes w shs
+  spaceClose w
