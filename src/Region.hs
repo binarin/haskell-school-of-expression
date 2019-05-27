@@ -5,6 +5,7 @@ module Region
   , Vector
   , containsS
   , containsR
+  , xUnion
   ) where
 
 import Shape
@@ -58,3 +59,7 @@ Complement r `containsR` p = not $ r `containsR` p
 (r1 `Union` r2) `containsR` p = r1 `containsR` p || r2 `containsR` p
 (r1 `Intersect` r2) `containsR` p = r1 `containsR` p && r2 `containsR` p
 Empty `containsR` _ = False
+
+
+xUnion :: Region -> Region -> Region
+p1 `xUnion` p2 = (p1 `Intersect` Complement p2) `Union` (p2 `Intersect` Complement p1)

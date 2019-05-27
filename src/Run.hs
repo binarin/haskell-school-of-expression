@@ -11,6 +11,7 @@ import System.Random (getStdRandom, randomR)
 
 import Import
 import Draw
+import Picture
 
 pickRandomDemo :: IO Demo
 pickRandomDemo = do
@@ -25,11 +26,12 @@ runnableDemo RandomDemo = liftIO $ pickRandomDemo
 runnableDemo d = pure d
 
 runDemo :: Demo -> IO ()
-runDemo DefaultDemo = coloredShapes1
+runDemo DefaultDemo = simplePictureDemo
 runDemo RandomDemo = pickRandomDemo >>= runDemo
 runDemo Sierpinski = serp
 runDemo FractalSnowflake = runSnowflakeFractal
 runDemo SomeColoredShapes = coloredShapes1
+runDemo SimplePictureDemo = simplePictureDemo
 
 run :: RIO App ()
 run = do
@@ -91,3 +93,20 @@ sierpinskiTri w x y size =
              sierpinskiTri w (x + size2) y size2
 
 
+simplePictureDemo :: IO ()
+simplePictureDemo = do
+  draw "Test" pic3
+  where
+    r1 = Shape (Rectangle 3 2)
+    r2 = Shape (Ellipse 1 1.5)
+    r3 = Shape (RtTriangle 3 2)
+    r4 = Shape (Polygon ([(-2.5,  2.5), (-3.0, 0), (-1.7, -1.0), (-1.1, 0.2), (-1.5, 2.0)]))
+    reg1 = r3 `xUnion` (r1 `Intersect` Complement r2 `Union` r4)
+    pic1 = Region Blue reg1
+    reg2 = let circle = Shape (Ellipse 0.5 0.5)
+               square = Shape (Rectangle 1 1)
+           in Scale (2, 2) circle
+              `Union` Translate (1,0) square
+              `Union` Translate (-1, 0) square
+    pic2 = Region Yellow $ Translate (0, -1) reg2
+    pic3 = pic2 `Over` pic1

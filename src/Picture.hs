@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 module Picture
   ( Picture(..)
   , Color(..)
@@ -5,13 +6,15 @@ module Picture
   , shapeToGRegion
   , drawRegionInWindow
   , drawPic
-  -- , draw
+  , draw
   , spaceClose
   , module Region
   )  where
 
+
+import Debug.Trace
 import Region
-import Draw
+import Draw hiding (trans)
 import Graphics.SOE hiding (Region)
 import qualified Graphics.SOE as G (Region)
 
@@ -50,4 +53,21 @@ winRect :: Region
 winRect = Shape (Rectangle (pixelToInch xWin) (pixelToInch yWin))
 
 shapeToGRegion :: Vector -> Vector -> Shape -> G.Region
-shapeToGRegion (lx, ly) (sx, sy) (Rectangle s1 s2) = createRectangle (lx + sx * s1, ly + sy * s2)(lx + sx * s1, ly + sy * s2)
+shapeToGRegion (lx, ly) (sx, sy) = \case
+  Rectangle s1 s2 -> (show ((trans (-s1/2, -s2/2)), (trans (s1/2, s2/2)))) `trace` createRectangle (trans (-s1/2, -s2/2)) (trans (s1/2, s2/2))
+  Ellipse r1 r2 -> createEllipse (trans (-r1, -r2)) (trans (r1, r2))
+  RtTriangle s1 s2 -> createPolygon [trans (0, 0), trans (s1, 0), trans (0, s2)]
+  Polygon points -> createPolygon $ trans `fmap` points
+  where
+    trans :: Vertex -> Point
+    trans (x, y) = (xWin2 + inchToPixel (lx + x * sx)
+                   ,yWin2 - inchToPixel (ly + y * sy)
+                   )
+    xWin2 = xWin `div` 2
+    yWin2 = yWin `div` 2
+
+draw :: String -> Picture -> IO ()
+draw s p = do
+  w <- openWindow s (xWin, yWin)
+  drawPic w p
+  spaceClose w

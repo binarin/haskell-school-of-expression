@@ -11,6 +11,7 @@ data Demo = DefaultDemo
           | Sierpinski
           | FractalSnowflake
           | SomeColoredShapes
+          | SimplePictureDemo
   deriving (Read, Show, Enum, Eq)
 
 allDemos :: [Demo]
