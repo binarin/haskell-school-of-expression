@@ -10,7 +10,7 @@ module Draw ( inchToPixel
             ) where
 
 import Shape
-import Graphics.SOE
+import SOE
 import Control.Monad (forM_)
 
 inchToPixel :: Float -> Int

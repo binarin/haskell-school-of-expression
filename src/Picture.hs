@@ -9,14 +9,16 @@ module Picture
   , draw
   , spaceClose
   , module Region
+  , clickableRegionsLoop
+  , picToList
   )  where
 
 
-import Debug.Trace
+import Control.Monad (forM_)
 import Region
 import Draw hiding (trans)
-import Graphics.SOE hiding (Region)
-import qualified Graphics.SOE as G (Region)
+import SOE hiding (Region)
+import qualified SOE as G (Region)
 
 data Picture = Region Color Region
              | Picture `Over` Picture
@@ -54,7 +56,7 @@ winRect = Shape (Rectangle (pixelToInch xWin) (pixelToInch yWin))
 
 shapeToGRegion :: Vector -> Vector -> Shape -> G.Region
 shapeToGRegion (lx, ly) (sx, sy) = \case
-  Rectangle s1 s2 -> (show ((trans (-s1/2, -s2/2)), (trans (s1/2, s2/2)))) `trace` createRectangle (trans (-s1/2, -s2/2)) (trans (s1/2, s2/2))
+  Rectangle s1 s2 -> createRectangle (trans (-s1/2, -s2/2)) (trans (s1/2, s2/2))
   Ellipse r1 r2 -> createEllipse (trans (-r1, -r2)) (trans (r1, r2))
   RtTriangle s1 s2 -> createPolygon [trans (0, 0), trans (s1, 0), trans (0, s2)]
   Polygon points -> createPolygon $ trans `fmap` points
@@ -71,3 +73,44 @@ draw s p = do
   w <- openWindow s (xWin, yWin)
   drawPic w p
   spaceClose w
+
+picToList :: Picture -> [(Color, Region)]
+picToList (Region c r) = [(c, r)]
+picToList EmptyPic = []
+picToList (r1 `Over` r2) = picToList r1 ++ picToList r2
+
+handleRegionListClick
+  :: [(Color, Region)]
+  -> Coordinate
+  -> ( Maybe (Color, Region)
+     , [(Color, Region)]
+     )
+handleRegionListClick [] _ = (Nothing, [])
+handleRegionListClick ((c, r):rs) coord =
+  if r `containsR` coord
+  then (Just (c,r), rs)
+  else let (hit, rs') = handleRegionListClick rs coord
+       in (hit, (c,r):rs')
+
+clickableRegionsLoop :: Window -> [(Color, Region)] -> IO ()
+clickableRegionsLoop w regs = do
+  putStrLn "1"
+  clearWindow w
+  putStrLn "2"
+  forM_ (reverse regs) $ \(c, r) -> do
+    drawRegionInWindow w c r
+  -- drawRegionInWindow w Blue (Shape (Rectangle 100 100))
+  -- drawRegionInWindow w Red (Shape (Ellipse 10 200))
+  -- drawInWindow w $ withColor Blue $ polygon [(100, 100), (100, 200), (200, 100)]
+  -- drawInWindow w $ withColor Red $ polygon [(200, 200), (200, 300), (300, 200)]
+  putStrLn "3"
+  (x, y) <- getLBP w
+  putStrLn "4"
+  case handleRegionListClick regs (pixelToInch $ x - xWin2
+                                  ,pixelToInch $ yWin2 - y
+                                  ) of
+    (Nothing, _) -> closeWindow w
+    (Just hit, newRegs) -> clickableRegionsLoop w (hit:newRegs)
+  where
+    xWin2 = xWin `div` 2
+    yWin2 = yWin `div` 2

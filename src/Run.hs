@@ -5,7 +5,7 @@
 module Run (run) where
 
 import RIO.List
-import Graphics.SOE
+import SOE
 import Data.List (cycle)
 import System.Random (getStdRandom, randomR)
 
@@ -92,10 +92,10 @@ sierpinskiTri w x y size =
              sierpinskiTri w x (y - size2) size2
              sierpinskiTri w (x + size2) y size2
 
-
 simplePictureDemo :: IO ()
 simplePictureDemo = do
-  draw "Test" pic3
+  w <- openWindow "it" (xWin, yWin)
+  clickableRegionsLoop w (picToList tpp2)
   where
     r1 = Shape (Rectangle 3 2)
     r2 = Shape (Ellipse 1 1.5)
@@ -110,3 +110,11 @@ simplePictureDemo = do
               `Union` Translate (-1, 0) square
     pic2 = Region Yellow $ Translate (0, -1) reg2
     pic3 = pic2 `Over` pic1
+
+    tp1 = Shape $ Polygon $ [(1, 1), (1, 2), (2, 1)]
+    tp2 = Shape $ Polygon $ [(2, 2), (2, 3), (3, 2)]
+    tpp1 = Region Blue r3
+    tpp2 = Region Red r4
+    tp = tpp1 `Over` tpp2
+    -- drawInWindow w $ withColor Blue $
+  -- drawInWindow w $ withColor Red $ polygon [(200, 200), (200, 300), (300, 200)]

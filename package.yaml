@@ -22,7 +22,10 @@ description:         Please see the README on Github at <https://github.com/gith
 dependencies:
 - base
 - rio
-- HGL
+- GLFW
+- OpenGL
+- old-time
+- stm
 - random
 
 ghc-options:

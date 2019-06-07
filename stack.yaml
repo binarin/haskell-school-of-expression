@@ -38,7 +38,8 @@ packages:
 # using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)
 extra-deps:
-  - /home/binarin/personal-workspace/hgl
+  - GLFW-0.5.2.5@sha256:fa54e997076a6b415c43100830e9b6ab6827c8766aef80e66d598de9b2400b93
+#  - /home/binarin/personal-workspace/hgl
 #  - HGL-3.2.3.1@sha256:9376119b074c41ab66dce5e07e5bffde84dbb95a6a6dcd028b2d8ac686dcab52
 
 # Override default flag values for local packages and extra-deps
@@ -70,6 +71,8 @@ allow-newer: true
 nix:
   enable: true
   packages:
+    - libGL
+    - libGLU
     - xorg.libX11
     - xorg.libXrandr
     - xorg.libXScrnSaver
