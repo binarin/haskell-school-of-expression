@@ -52,6 +52,7 @@ module SOE (
 
 import Data.Ix (Ix)
 import Data.Word (Word32)
+import Concurrent
 import qualified System.Time
 import qualified Graphics.UI.GLFW as GLFW
 import qualified Graphics.Rendering.OpenGL as GL

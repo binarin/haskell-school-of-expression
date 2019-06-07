@@ -61,9 +61,10 @@ snowflakeFractal w colors xc yc size
         (c':cs') -> (c', cs')
         _ -> (White, [White])
       in do
-        drawInWindow w $ withColor c $ do
-          polygon $ [ (px a, py a) | a <- angles1 ]
-          polygon $ [ (px a, py a) | a <- angles2 ]
+        drawInWindow w $ withColor c $ overGraphics
+          [ polygon $ [ (px a, py a) | a <- angles1 ]
+          , polygon $ [ (px a, py a) | a <- angles2 ]
+          ]
         forM_ (angles1++angles2) $ \a -> do
           snowflakeFractal w cs (px a) (py a) (size `div` 3)
 
@@ -95,7 +96,7 @@ sierpinskiTri w x y size =
 simplePictureDemo :: IO ()
 simplePictureDemo = do
   w <- openWindow "it" (xWin, yWin)
-  clickableRegionsLoop w (picToList tpp2)
+  clickableRegionsLoop w (picToList pic3)
   where
     r1 = Shape (Rectangle 3 2)
     r2 = Shape (Ellipse 1 1.5)
@@ -110,11 +111,3 @@ simplePictureDemo = do
               `Union` Translate (-1, 0) square
     pic2 = Region Yellow $ Translate (0, -1) reg2
     pic3 = pic2 `Over` pic1
-
-    tp1 = Shape $ Polygon $ [(1, 1), (1, 2), (2, 1)]
-    tp2 = Shape $ Polygon $ [(2, 2), (2, 3), (3, 2)]
-    tpp1 = Region Blue r3
-    tpp2 = Region Red r4
-    tp = tpp1 `Over` tpp2
-    -- drawInWindow w $ withColor Blue $
-  -- drawInWindow w $ withColor Red $ polygon [(200, 200), (200, 300), (300, 200)]

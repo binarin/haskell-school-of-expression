@@ -94,18 +94,10 @@ handleRegionListClick ((c, r):rs) coord =
 
 clickableRegionsLoop :: Window -> [(Color, Region)] -> IO ()
 clickableRegionsLoop w regs = do
-  putStrLn "1"
   clearWindow w
-  putStrLn "2"
   forM_ (reverse regs) $ \(c, r) -> do
     drawRegionInWindow w c r
-  -- drawRegionInWindow w Blue (Shape (Rectangle 100 100))
-  -- drawRegionInWindow w Red (Shape (Ellipse 10 200))
-  -- drawInWindow w $ withColor Blue $ polygon [(100, 100), (100, 200), (200, 100)]
-  -- drawInWindow w $ withColor Red $ polygon [(200, 200), (200, 300), (300, 200)]
-  putStrLn "3"
   (x, y) <- getLBP w
-  putStrLn "4"
   case handleRegionListClick regs (pixelToInch $ x - xWin2
                                   ,pixelToInch $ yWin2 - y
                                   ) of
