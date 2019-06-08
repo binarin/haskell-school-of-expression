@@ -5,13 +5,15 @@
 module Run (run) where
 
 import RIO.List
-import SOE
+import SOE hiding (Region)
+-- import qualified SOE as G (Region)
 import Data.List (cycle)
 import System.Random (getStdRandom, randomR)
 
 import Import
 import Draw
 import Picture
+import Animation
 
 pickRandomDemo :: IO Demo
 pickRandomDemo = do
@@ -32,6 +34,7 @@ runDemo Sierpinski = serp
 runDemo FractalSnowflake = runSnowflakeFractal
 runDemo SomeColoredShapes = coloredShapes1
 runDemo SimplePictureDemo = simplePictureDemo
+runDemo SimpleAnimation = simpleAnimationDemo
 
 run :: RIO App ()
 run = do
@@ -111,3 +114,19 @@ simplePictureDemo = do
               `Union` Translate (-1, 0) square
     pic2 = Region Yellow $ Translate (0, -1) reg2
     pic3 = pic2 `Over` pic1
+
+simpleAnimationDemo :: IO ()
+simpleAnimationDemo = do
+  animate "Animated Shape" (picToGraphic . planets)
+
+rubberBall :: Animation Shape
+rubberBall t = Ellipse (sin t) (cos t)
+
+revolvingBall :: Animation Region
+revolvingBall t = let ball = Shape (Ellipse 0.2 0.2)
+                  in Translate (sin t, cos t) ball
+
+planets :: Animation Picture
+planets t = let p1 = Region Red (Shape (rubberBall t))
+                p2 = Region Yellow (revolvingBall t)
+            in p1 `Over` p2

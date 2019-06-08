@@ -12,6 +12,7 @@ data Demo = DefaultDemo
           | FractalSnowflake
           | SomeColoredShapes
           | SimplePictureDemo
+          | SimpleAnimation
   deriving (Read, Show, Enum, Eq)
 
 allDemos :: [Demo]

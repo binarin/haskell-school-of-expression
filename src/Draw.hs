@@ -7,6 +7,7 @@ module Draw ( inchToPixel
             , shapeToGraphic
             , spaceClose
             , coloredShapes1
+            , spaceCloseEx
             ) where
 
 import Shape
@@ -40,8 +41,18 @@ transList = fmap trans
 spaceClose :: Window -> IO ()
 spaceClose w = do
   k <- getKey w
+  putStrLn $ "got " ++ show k
   if k == ' ' then closeWindow w
               else spaceClose w
+
+spaceCloseEx :: Window -> IO () -> IO ()
+spaceCloseEx w loop = do
+  k <- maybeGetWindowEvent w
+  case k of
+    Just (Key c d) | c == ' ' && d -> closeWindow w
+    Just Closed -> closeWindow w
+    Nothing -> loop
+    _ -> spaceCloseEx w loop
 
 shapeToGraphic :: Shape -> Graphic
 shapeToGraphic (Rectangle s1 s2) = polygon $ transList [(-s12, -s22), (-s12, s22), (s12, s22), (s12, -s22)]
