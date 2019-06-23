@@ -32,3 +32,12 @@ picToGraphic :: Picture -> Graphic
 -- picToGraphic (p1 `Over` p2) = picToGraphic p1 `overGraphic` picToGraphic p2
 -- picToGraphic EmptyPic = emptyGraphic
 picToGraphic p = foldr (\(c, r) g -> withColor c (regionToGraphic r) `overGraphic` g) emptyGraphic (picToList p)
+
+
+newtype Behaviour a = Beh (Time -> a)
+
+instance Semigroup a => Semigroup (Behaviour a) where
+  Beh b1 <> Beh b2 = Beh $ \t -> b1 t <> b2 t
+
+instance Monoid a => Monoid (Behaviour a) where
+  mempty = Beh $ \_ -> mempty

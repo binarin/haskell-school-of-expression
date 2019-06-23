@@ -106,3 +106,9 @@ clickableRegionsLoop w regs = do
   where
     xWin2 = xWin `div` 2
     yWin2 = yWin `div` 2
+
+instance Semigroup Picture where
+  p1 <> p2 = p1 `Over` p2
+
+instance Monoid Picture where
+  mempty = EmptyPic

@@ -13,6 +13,7 @@ data Demo = DefaultDemo
           | SomeColoredShapes
           | SimplePictureDemo
           | SimpleAnimation
+          | ReactivityTest
   deriving (Read, Show, Enum, Eq)
 
 allDemos :: [Demo]

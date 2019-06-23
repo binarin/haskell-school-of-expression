@@ -1,8 +1,8 @@
 module Draw ( inchToPixel
             , pixelToInch
             , intToFloat
-            , xWin
-            , yWin
+            , xWin, xWin2
+            , yWin, yWin2
             , trans
             , shapeToGraphic
             , spaceClose

@@ -14,6 +14,8 @@ import Import
 import Draw
 import Picture
 import Animation
+import Reactimate
+import FAL
 
 pickRandomDemo :: IO Demo
 pickRandomDemo = do
@@ -35,6 +37,7 @@ runDemo FractalSnowflake = runSnowflakeFractal
 runDemo SomeColoredShapes = coloredShapes1
 runDemo SimplePictureDemo = simplePictureDemo
 runDemo SimpleAnimation = simpleAnimationDemo
+runDemo ReactivityTest = simpleReactiveDemo
 
 run :: RIO App ()
 run = do
@@ -130,3 +133,21 @@ planets :: Animation Picture
 planets t = let p1 = Region Red (Shape (rubberBall t))
                 p2 = Region Yellow (revolvingBall t)
             in p1 `Over` p2
+
+simpleReactiveDemo :: IO ()
+simpleReactiveDemo = reactimate "test" ball3 (pure . picToGraphic)
+
+ball3 = paint color4 circ3
+circ3 = translate mouse (ell (pure 0.2) (pure 0.2))
+
+paint :: Behavior Color -> Behavior Region -> Behavior Picture
+paint c r = Region <$> c <*> r
+
+color4 = white `switch` (key `snapshot` color4 =>> \(c, old) ->
+                            case c of 'R' -> red
+                                      'B' -> blue
+                                      'Y' -> yellow
+                                      _ -> pure old)
+
+ell :: Behavior Float -> Behavior Float -> Behavior Region
+ell r1 r2 = Shape <$> (Ellipse <$> r1 <*> r2)
