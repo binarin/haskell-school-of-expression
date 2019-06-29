@@ -1,5 +1,7 @@
+{-# OPTIONS_GHC -Wno-name-shadowing #-}
 module Music where
 
+import Test.Hspec
 import Data.Ratio
 
 type Pitch = (PitchClass, Octave)
@@ -161,10 +163,6 @@ dur (Tempo t m) = dur m / t
 dur (Trans _ m) = dur m
 dur (Instr _ m) = dur m
 
-minDur :: Music -> Music -> Dur
-minDur m1 m2 = undefined
-
-
 revM :: Music -> Music
 revM n@(Note _ _) = n
 revM r@(Rest _) = r
@@ -190,5 +188,89 @@ cut dr (m1 :=: m2) = cut dr m1 :=: cut dr m2
 cut dr (m1 :+: m2) = let m1' = cut dr m1
                     in m1' :+: cut (dr - dur m1') m2
 
-(/=:) :: Music -> Music -> Music
-m1 /=: m2 = cut (min (dur m1) (dur m2)) (m1 :=: m2)
+(/=/) :: Music -> Music -> Music
+m1 /=/ m2 = cut (minDur m1 m2) (m1 :=: m2)
+
+minDur :: Music -> Music -> Dur
+minDur m1 m2 =
+  let
+    stamps1 = fst $ musicEndTimestamps 0 1 m1
+    stamps2 = fst $ musicEndTimestamps 0 1 m2
+    go cur [] _ = cur
+    go cur _ [] = cur
+    go _ as@(a:as') bs@(b:bs')
+      | a < b = go a as' bs
+      | otherwise = go b as bs'
+
+  in go 0 stamps1 stamps2
+
+musicEndTimestamps :: Dur -> Ratio Int -> Music -> ([Dur], Dur)
+musicEndTimestamps t0 tempo (Note _ dr) =
+  let
+    t1 = t0 + dr * tempo
+  in ([t1], t1)
+musicEndTimestamps t0 tempo (Rest dr) =
+  let
+    t1 = t0 + dr * tempo
+  in ([t1], t1)
+musicEndTimestamps t0 tempo (Trans _ m) = musicEndTimestamps t0 tempo m
+musicEndTimestamps t0 tempo (Instr _ m) = musicEndTimestamps t0 tempo m
+musicEndTimestamps t0 tempo (Tempo t m) = musicEndTimestamps t0 (tempo / t) m
+musicEndTimestamps t0 tempo (m1 :+: m2) =
+  let
+    (stamps1, last1) = musicEndTimestamps t0 tempo m1
+    (stamps2, last2) = musicEndTimestamps last1 tempo m2
+  in (stamps1 ++ stamps2, last2)
+musicEndTimestamps t0 tempo (m1 :=: m2) =
+  let
+    (stamps1, last1) = musicEndTimestamps t0 tempo m1
+    (stamps2, last2) = musicEndTimestamps t0 tempo m2
+  in
+    (joinTimestamps stamps1 stamps2, max last1 last2)
+
+joinTimestamps :: [Ratio Int] -> [Ratio Int] -> [Ratio Int]
+joinTimestamps [] s2 = s2
+joinTimestamps s1 [] = s1
+joinTimestamps as@(a:as') bs@(b:bs')
+  | a < b = a : joinTimestamps as' bs
+  | otherwise = b : joinTimestamps as bs'
+
+shortestParallelSpec :: Spec
+shortestParallelSpec = describe "/=/" $ do
+  let mu1 = c 4 10
+      mu2 = c 4 5
+  describe "handles simple cases" $ do
+    it "with one order" $ do
+      dur (mu1 /=/ mu2) `shouldBe` 5
+    it "with reverse order" $ do
+      dur (mu2 /=/ mu1) `shouldBe` 5
+  describe "handles one infinite music" $ do
+    it "right one" $ do
+      dur (mu1 /=/ repeatM mu2) `shouldBe` 10
+    it "left one" $ do
+      dur (repeatM mu1 /=/ mu2) `shouldBe` 5
+  describe "handles more complex cases" $ do
+    it "with more parallelism" $ do
+      dur ((Rest 5 :=: repeatM mu2) /=/ mu1) `shouldBe` 10
+  describe "handles tempo change" $ do
+    it "for slowing down" $ do
+      dur (Tempo 3 mu1 /=/ mu2) `shouldBe` (10%3)
+
+testMinDur :: IO ()
+testMinDur = hspec $ do
+  shortestParallelSpec
+
+trill :: Int -> Dur -> Music -> Music
+trill i d n@(Note p nd) =
+  if d >= nd then n
+  else Note p d :+: trill (negate i) d (Note (trans i p) (nd - d))
+trill i d (Tempo a m) = Tempo a (trill i (d * a) m)
+trill i d (Trans a m) = Trans a (trill i d m)
+trill i d (Instr a m) = Instr a (trill i d m)
+trill _ _ _ = error "Trill input must be a single note"
+
+trill' :: Int -> Dur -> Music -> Music
+trill' i sDur m = trill (negate i) sDur (Trans i m)
+
+roll :: Dur -> Music -> Music
+roll dur m = trill 0 dur m

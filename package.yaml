@@ -27,6 +27,7 @@ dependencies:
 - old-time
 - stm
 - random
+- hspec
 
 ghc-options:
 - -Wall
